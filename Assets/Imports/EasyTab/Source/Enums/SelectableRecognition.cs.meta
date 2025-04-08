@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: e48adb9037e248d68dd0ec9409700d3a
+timeCreated: 1715082922
+AssetOrigin:
+  serializedVersion: 1
+  productId: 286071
+  packageName: EasyTab
+  packageVersion: 1.3.1
+  assetPath: Assets/EasyTab/Source/Enums/SelectableRecognition.cs
+  uploadId: 708997

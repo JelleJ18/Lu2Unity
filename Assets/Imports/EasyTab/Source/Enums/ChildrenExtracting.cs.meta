@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: eb5e9beee74047f1b4a70cc502418505
+timeCreated: 1715067847
+AssetOrigin:
+  serializedVersion: 1
+  productId: 286071
+  packageName: EasyTab
+  packageVersion: 1.3.1
+  assetPath: Assets/EasyTab/Source/Enums/ChildrenExtracting.cs
+  uploadId: 708997

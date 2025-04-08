@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: f7174be95a794bc3819d4ea1a9bee420
+timeCreated: 1712236098
+AssetOrigin:
+  serializedVersion: 1
+  productId: 286071
+  packageName: EasyTab
+  packageVersion: 1.3.1
+  assetPath: Assets/EasyTab/Source/Enums/NavigationLock.cs
+  uploadId: 708997

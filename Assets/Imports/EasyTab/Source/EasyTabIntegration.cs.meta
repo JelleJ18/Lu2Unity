@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 70bc4e068d05717458be5b2a0dc05ea4
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 286071
+  packageName: EasyTab
+  packageVersion: 1.3.1
+  assetPath: Assets/EasyTab/Source/EasyTabIntegration.cs
+  uploadId: 708997

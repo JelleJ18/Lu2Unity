@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: d3ba827a0bde07646882ae805a3827fa
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 286071
+  packageName: EasyTab
+  packageVersion: 1.3.1
+  assetPath: Assets/EasyTab/CHANGELOG.md
+  uploadId: 708997

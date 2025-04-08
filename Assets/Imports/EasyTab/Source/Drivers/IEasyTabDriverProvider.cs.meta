@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: 9c6f973a1ad34f6eb2d2b809b9432739
+timeCreated: 1727606931
+AssetOrigin:
+  serializedVersion: 1
+  productId: 286071
+  packageName: EasyTab
+  packageVersion: 1.3.1
+  assetPath: Assets/EasyTab/Source/Drivers/IEasyTabDriverProvider.cs
+  uploadId: 708997

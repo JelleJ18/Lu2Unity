@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: 96704e3b392646b696e98d30d677641c
+timeCreated: 1727525573
+AssetOrigin:
+  serializedVersion: 1
+  productId: 286071
+  packageName: EasyTab
+  packageVersion: 1.3.1
+  assetPath: Assets/EasyTab/Source/Drivers/Customization/DecoratableEasyTabDriver.cs
+  uploadId: 708997

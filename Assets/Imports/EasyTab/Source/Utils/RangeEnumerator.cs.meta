@@ -1,0 +1,10 @@
+﻿fileFormatVersion: 2
+guid: 371a22178dcb4825babcec6636cf28ab
+timeCreated: 1710512117
+AssetOrigin:
+  serializedVersion: 1
+  productId: 286071
+  packageName: EasyTab
+  packageVersion: 1.3.1
+  assetPath: Assets/EasyTab/Source/Utils/RangeEnumerator.cs
+  uploadId: 708997

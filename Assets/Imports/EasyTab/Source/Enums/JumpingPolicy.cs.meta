@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: d06cd72358614f3bb313e7878bcf9bc3
+timeCreated: 1715082914
+AssetOrigin:
+  serializedVersion: 1
+  productId: 286071
+  packageName: EasyTab
+  packageVersion: 1.3.1
+  assetPath: Assets/EasyTab/Source/Enums/JumpingPolicy.cs
+  uploadId: 708997

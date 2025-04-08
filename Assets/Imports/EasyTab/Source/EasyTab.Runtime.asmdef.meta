@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 36fdc483e3ddee347b487527c24d8a99
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 286071
+  packageName: EasyTab
+  packageVersion: 1.3.1
+  assetPath: Assets/EasyTab/Source/EasyTab.Runtime.asmdef
+  uploadId: 708997
