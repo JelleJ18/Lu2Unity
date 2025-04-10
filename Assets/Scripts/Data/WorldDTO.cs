@@ -4,9 +4,9 @@ using UnityEngine;
 [System.Serializable]
 public class WorldDTO
 {
-    public string Id;
-    public string Name;
-    public int MaxLength;
-    public int MaxHeight;
-    public string UserName;
+    public Guid id;
+    public string name;
+    public int maxLength;
+    public int maxHeight;
+    public string userName;
 }

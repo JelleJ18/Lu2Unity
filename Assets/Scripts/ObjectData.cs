@@ -9,7 +9,9 @@ public class ObjectData : MonoBehaviour
     {
         if (isPlaced)
         {
+            // Verwijder object als het al geplaatst is
             Destroy(gameObject);
         }
     }
 }
+

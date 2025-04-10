@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TMPro;
@@ -7,12 +9,18 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
+using Newtonsoft.Json;
 
 public class ApiClient : MonoBehaviour
 {
     public static ApiClient Instance { get; private set; }
-    private string token;
+    private static string token;
     private static string _username;
+
+    public string GetToken()
+    {
+        return token;
+    }
 
     private string userName
     {
@@ -35,6 +43,12 @@ public class ApiClient : MonoBehaviour
 
     public GameObject worldItemPrefab;
     public Transform worldListContainer;
+    public GameObject worldMenu;
+    public TMP_InputField worldNameInput;
+    public TMP_InputField worldHeightInput;
+    public TMP_InputField worldWidthInput;
+
+    public WorldBuilder worldBuilder;
 
     bool isLoggedIn;
 
@@ -114,13 +128,22 @@ public class ApiClient : MonoBehaviour
     }
 
 
-    public void OnCreateWorldButtonClicked()
+    public async void OnCreateWorldButtonClicked()
     {
-        string naam = "Mijn Wereld"; // Dit kun je aanpassen naar invoervelden in de UI
-        int maxHeight = 100; // Dit kun je aanpassen naar invoervelden in de UI
-        int maxWidth = 100;
+        string naam = worldNameInput.text; 
+        int maxHeight = int.Parse(worldHeightInput.text);
+        int maxWidth = int.Parse(worldWidthInput.text);
 
-        CreateWorld(naam, maxHeight, maxWidth);
+        WorldDTO worldCreated = await CreateWorld(naam, maxHeight, maxWidth);
+        
+        if(worldCreated != null)
+        {
+            List<WorldDTO> worlds = await GetWorlds();
+            if(worlds != null)
+            {
+                DisplayWorlds(worlds);
+            }
+        }
     }
 
     public async Task<WorldDTO> CreateWorld(string name, int height, int length)
@@ -150,7 +173,7 @@ public class ApiClient : MonoBehaviour
 
         if (!string.IsNullOrEmpty(response))
         {
-            WorldDTO worldData = JsonUtility.FromJson<WorldDTO>(jsonData);
+            WorldDTO worldData = JsonUtility.FromJson<WorldDTO>(response);
             return worldData;
         }
 
@@ -170,47 +193,118 @@ public class ApiClient : MonoBehaviour
 
         string response = await PerformApiCall(apiUrl, "GET", token: token);
 
+        // Log de response om te controleren wat je van de API ontvangt
+        Debug.Log("API Response: " + response);
+
         if (!string.IsNullOrEmpty(response))
         {
-            WorldDTOListWrapper worldWrapper = JsonUtility.FromJson<WorldDTOListWrapper>("{\"worlds\":" + response + "}");
-
-            // Haal de werelden uit de wrapper
-            List<WorldDTO> worlds = new List<WorldDTO>(worldWrapper.worlds);
-            return worlds;
+            try
+            {
+                List<WorldDTO> worlds = JsonConvert.DeserializeObject<List<WorldDTO>>(response);
+                Debug.Log("Werelden geladen: " + worlds.Count);
+                return worlds;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Error deserializing response: " + e.Message);
+            }
         }
 
         return null;
     }
 
+
     public void DisplayWorlds(List<WorldDTO> worlds)
     {
-        // Eerst: opruimen
         foreach (Transform child in worldListContainer)
         {
             Destroy(child.gameObject);
         }
 
-        // Dan: vullen
         foreach (var world in worlds)
         {
             GameObject worldItem = Instantiate(worldItemPrefab, worldListContainer);
             TMP_Text nameText = worldItem.GetComponentInChildren<TMP_Text>();
-            nameText.text = world.Name;
+            nameText.text = world.name;
+            Debug.Log("World naam: " + world.name + " | ID: " + world.id);
 
-            // Optional: als je er een button aan hebt hangen
-            Button button = worldItem.GetComponent<Button>();
+
+            Button button = worldItem.GetComponentInChildren<Button>();
             if (button != null)
             {
+                var capturedWorld = world; 
                 button.onClick.AddListener(() => {
-                    Debug.Log("Klikte op wereld: " + world.Name);
-                    // Hier kun je bijv. een functie aanroepen om de wereld te laden
+                    LoadWorld(capturedWorld);
                 });
             }
         }
     }
 
+    public void LoadWorld(WorldDTO world)
+    {
+        Debug.Log("WorldBuilder reference: " + worldBuilder);
+        Debug.Log("Wereld aan het laden: " + world.name);
+        Debug.Log("World ID: " + world.id);  // Log de wereld ID
 
-    private async Task<string> PerformApiCall(string apiUrl, string httpMethod, string jsonData = null, string token = null)
+        worldBuilder.currentWorldId = world.id;
+        Debug.Log("Loaded world ID: " + worldBuilder.currentWorldId);  // Log de wereld ID na toewijzing
+
+        worldBuilder.BuildWorld(world.maxHeight, world.maxLength);
+        worldMenu.SetActive(false);
+        Debug.Log("Huidige wereld ID na het bouwen van de wereld: " + worldBuilder.currentWorldId);  // Log na bouwen
+    }
+
+
+    public async void SaveObjectsForWorld(List<ObjectDTO> objectsToSave)
+    {
+        if (worldBuilder.currentWorldId == Guid.Empty)
+        {
+            Debug.LogError("De wereld GUID is leeg. Kan geen objecten opslaan.");
+            return;
+        }
+
+        Debug.Log("Wereld GUID: " + worldBuilder.currentWorldId);
+
+        // Voeg het juiste EnvironmentId toe aan elk object
+        foreach (var objectToSave in objectsToSave)
+        {
+            objectToSave.EnvironmentId = worldBuilder.currentWorldId;
+        }
+
+        // Zet de objecten om naar JSON
+        foreach (var objectToSave in objectsToSave)
+        {
+            string jsonData = JsonConvert.SerializeObject(objectToSave);
+            string url = $"https://avansict2220486.azurewebsites.net/api/object2d"; // Verander dit naar jouw API URL
+            string token = ApiClient.Instance.GetToken();
+
+            Debug.Log("Token: " + token);
+            Debug.Log("Object Id" + objectToSave.Id);
+            Debug.Log("Env Id: " + objectToSave.EnvironmentId);
+            Debug.Log("JSON data die wordt verzonden: " + jsonData);
+
+            // Voer de API-aanroep uit
+            string response = await ApiClient.Instance.PerformApiCall(url, "POST", jsonData, token);
+
+            if (!string.IsNullOrEmpty(response))
+            {
+                Debug.Log("Object succesvol opgeslagen: " + response);
+            }
+            else
+            {
+                Debug.LogError("Fout bij opslaan van object: Geen geldige reactie ontvangen.");
+            }
+        }
+    }
+
+    [System.Serializable]
+    public class Object2DListWrapper
+    {
+        public List<ObjectDTO> objects;
+    }
+
+
+    public async Task<string> PerformApiCall(string apiUrl, string httpMethod, string jsonData = null, string token = null)
     {
         using (UnityWebRequest request = new UnityWebRequest(apiUrl, httpMethod))
         {
@@ -223,7 +317,6 @@ public class ApiClient : MonoBehaviour
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
 
-            // Verwijder de Authorization header voor login-aanroepen
             if (!string.IsNullOrEmpty(token) && apiUrl.Contains("environment2d"))
             {
                 request.SetRequestHeader("Authorization", "Bearer " + token);
