@@ -17,12 +17,10 @@ public class BuildManager : MonoBehaviour
     [Header("Main Panels")]
     public Transform interiorMenu;
     public Transform decorationMenu;
-    public Transform groundMenu;
 
     [Header("Contents")]
     public Transform interiorContent;
     public Transform decorationContent;
-    public Transform groundContent;
 
     public Animator buildAnim;
 
@@ -32,7 +30,6 @@ public class BuildManager : MonoBehaviour
 
     private List<GameObject> interiorObjects = new List<GameObject>();
     private List<GameObject> decorationObjects = new List<GameObject>();
-    private List<GameObject> groundObjects = new List<GameObject>();
 
     private int menuIndex = 0;
     private bool isOpen = false;
@@ -41,7 +38,6 @@ public class BuildManager : MonoBehaviour
     {
         menuObjects.Add(interiorMenu.gameObject);
         menuObjects.Add(decorationMenu.gameObject);
-        menuObjects.Add(groundMenu.gameObject);
 
         foreach (GameObject go in buildObjects)
         {
@@ -59,11 +55,6 @@ public class BuildManager : MonoBehaviour
                 {
                     decorationObjects.Add(go);
                     instantiatedButton = Instantiate(buttonPrefab, decorationContent);
-                }
-                else if (type == ObjectType.Ground)
-                {
-                    groundObjects.Add(go);
-                    instantiatedButton = Instantiate(buttonPrefab, groundContent);
                 }
                 else
                 {

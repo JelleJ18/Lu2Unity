@@ -29,7 +29,6 @@ public class ObjectPost : MonoBehaviour
         }
         DontDestroyOnLoad(this);
 
-        // Controleer of prefabMappings niet null of leeg is
         if (prefabMappings == null || prefabMappings.Count == 0)
         {
             Debug.LogError("Prefab mappings are empty or null!");
@@ -44,6 +43,11 @@ public class ObjectPost : MonoBehaviour
     public void SaveAllObjects(Guid environmentId)
     {
         List<ObjectDTO> objectDtos = new List<ObjectDTO>();
+
+        var uniqueObjects = placedObjects
+        .GroupBy(o => new { Name = o.name, Pos = o.transform.position })
+        .Select(g => g.First())
+        .ToList();
 
         foreach (GameObject obj in placedObjects)
         {
@@ -69,14 +73,12 @@ public class ObjectPost : MonoBehaviour
 
     public void SpawnObjectFromDto(ObjectDTO dto)
     {
-        // Check of prefabMapping null is of leeg
         if (prefabMapping == null)
         {
             Debug.LogError("Prefab mapping is null!");
             return;
         }
 
-        // Check of de PrefabId bestaat in de mapping
         if (!prefabMapping.ContainsKey(dto.PrefabId))
         {
             Debug.LogWarning($"PrefabId '{dto.PrefabId}' not found in the mapping.");
@@ -90,16 +92,22 @@ public class ObjectPost : MonoBehaviour
             return;
         }
 
-        // Log de positie en rotatie voor debug
-        Debug.Log($"Spawning object at position: {dto.PositionX}, {dto.PositionY} with rotation: {dto.RotationZ}");
-
         Vector2 position = new Vector2(dto.PositionX, dto.PositionY);
         GameObject instance = Instantiate(prefab, position, Quaternion.Euler(0, 0, dto.RotationZ));
 
         instance.transform.localScale = new Vector3(dto.ScaleX, dto.ScaleY, 1f);
+
+        placedObjects.Add(instance);
     }
 
-
+    public void ClearWorldFromObjects()
+    {
+        foreach (GameObject obj in placedObjects)
+        {
+            Destroy(obj);
+        }
+        placedObjects.Clear();
+    }
 
 
 }

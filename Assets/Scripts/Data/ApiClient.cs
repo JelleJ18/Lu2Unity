@@ -50,13 +50,13 @@ public class ApiClient : MonoBehaviour
 
     public WorldBuilder worldBuilder;
 
-    bool isLoggedIn;
-
     private void Awake()
     {
         buildManager.enabled = false;
         cameraMovement.enabled = false;
         buildPanel.SetActive(false);
+
+        //Instance aanmaken zodat ik apimanager overal kan aanroepen.
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
@@ -68,7 +68,7 @@ public class ApiClient : MonoBehaviour
         DontDestroyOnLoad(this);
     }
 
-
+    //Functionaliteit voor het registreren,, er word een post gestuurd naar de api met de email en password text uit de inputfields en dit word er vervolgens als nieuwe gebruiker in de database gezet.
     public async void Register()
     {
         Debug.Log("Register aangeroepen!");
@@ -84,6 +84,7 @@ public class ApiClient : MonoBehaviour
         await PerformApiCall("https://avansict2220486.azurewebsites.net/account/register", "Post",jsondata);
     }
 
+    //Functionaliteit voor het inloggen, er word een post gestuurd naar de api met de email en password text uit de inputfields en er word gecheckt voor een match. Vervolgens word de token opgeslagen en kan die verder gebruikt worden.
     public async void Login()
     {
         Debug.Log("Login aangeroepen!");
@@ -127,7 +128,7 @@ public class ApiClient : MonoBehaviour
         }
     }
 
-
+    //Functionaliteit voor de knop om een wereld te maken, deze roept de CreateWorld aan en vervolgend word de wereld lijst bijgewerkt door DisplayWorlds().
     public async void OnCreateWorldButtonClicked()
     {
         string naam = worldNameInput.text; 
@@ -146,6 +147,7 @@ public class ApiClient : MonoBehaviour
         }
     }
 
+    //Functionaliteit voor het maken van een wereld, er word gebruik gemaakt van een post naar de api en de worlddto voor de wereld word aangemaakt.
     public async Task<WorldDTO> CreateWorld(string name, int height, int length)
     {
 
@@ -181,6 +183,7 @@ public class ApiClient : MonoBehaviour
 
     }
 
+    //Functionaliteit voor het ophalen van de werelden van de gebruiker, er word een get uitgevoerd met de username en er word gekeken naar welke werelden aan welke user gekoppelt zit.
     public async Task<List<WorldDTO>> GetWorlds()
     {
         if (string.IsNullOrEmpty(token))
@@ -189,11 +192,10 @@ public class ApiClient : MonoBehaviour
             return null;
         }
 
-        string apiUrl = "https://avansict2220486.azurewebsites.net/api/environment2d/userworlds?UserName=" + _username; // Zorg ervoor dat je het juiste endpoint gebruikt
+        string apiUrl = "https://avansict2220486.azurewebsites.net/api/environment2d/userworlds?UserName=" + _username; 
 
         string response = await PerformApiCall(apiUrl, "GET", token: token);
 
-        // Log de response om te controleren wat je van de API ontvangt
         Debug.Log("API Response: " + response);
 
         if (!string.IsNullOrEmpty(response))
@@ -201,7 +203,6 @@ public class ApiClient : MonoBehaviour
             try
             {
                 List<WorldDTO> worlds = JsonConvert.DeserializeObject<List<WorldDTO>>(response);
-                Debug.Log("Werelden geladen: " + worlds.Count);
                 return worlds;
             }
             catch (Exception e)
@@ -213,7 +214,7 @@ public class ApiClient : MonoBehaviour
         return null;
     }
 
-
+    //Functionaliteit voor het weergeven van de werelden in de lijst wanneer er is ingelogd, vervolgens word er een onclick event toegevoegd aan de button voor het laden en verwijderen van die speciefieke wereld.
     public void DisplayWorlds(List<WorldDTO> worlds)
     {
         foreach (Transform child in worldListContainer)
@@ -229,32 +230,68 @@ public class ApiClient : MonoBehaviour
             Debug.Log("World naam: " + world.name + " | ID: " + world.id);
 
 
-            Button button = worldItem.GetComponentInChildren<Button>();
-            if (button != null)
+            Button[] buttons = worldItem.GetComponentsInChildren<Button>();
+            if (buttons.Length >= 2)
             {
-                var capturedWorld = world; 
-                button.onClick.AddListener(() => {
+                var capturedWorld = world;
+
+                buttons[0].onClick.AddListener(() => {
                     LoadWorld(capturedWorld);
+                });
+
+                buttons[1].onClick.AddListener(() => {
+                    DeleteWorld(capturedWorld);
                 });
             }
         }
     }
 
+    //Functionaliteit voor het inladen van de werelde en zijn objecten, tilemap word gebouwd en objecten worden ge-instantiate.
     public async void LoadWorld(WorldDTO world)
     {
-        Debug.Log("WorldBuilder reference: " + worldBuilder);
         Debug.Log("Wereld aan het laden: " + world.name);
-        Debug.Log("World ID: " + world.id);  // Log de wereld ID
 
         worldBuilder.currentWorldId = world.id;
-        Debug.Log("Loaded world ID: " + worldBuilder.currentWorldId);  // Log de wereld ID na toewijzing
 
         worldBuilder.BuildWorld(world.maxHeight, world.maxLength);
         await LoadObjectsForWorld(world.id);
         worldMenu.SetActive(false);
-        Debug.Log("Huidige wereld ID na het bouwen van de wereld: " + worldBuilder.currentWorldId);  // Log na bouwen
+        Debug.Log("Huidige wereld ID na het bouwen van de wereld: " + worldBuilder.currentWorldId);  
     }
 
+    //Functionaliteit voor het verwijderen van een environment, roept een delete aan via de api.
+    public async void DeleteWorld(WorldDTO world)
+    {
+        if (string.IsNullOrEmpty(token))
+        {
+            Debug.LogError("Geen token beschikbaar voor het verwijderen.");
+            return;
+        }
+
+        string url = $"https://avansict2220486.azurewebsites.net/api/environment2d/{world.id}";
+        string response = await PerformApiCall(url, "DELETE", token: token);
+
+        if (response != null)
+        {
+            Debug.Log("Wereld succesvol verwijderd: " + world.name);
+
+            var worlds = await GetWorlds();
+            if (worlds != null && worlds.Count > 0)
+            {
+                DisplayWorlds(worlds);
+            }
+            else
+            {
+                DisplayWorlds(new List<WorldDTO>());
+            }
+        }
+        else
+        {
+            Debug.LogError("Fout bij verwijderen van wereld: " + world.name + response);
+        }
+    }
+
+    //Wanneer er op de save button word geklikt word de save functionaliteit aangeroepen en alle objecten opgeslagen.
     public void OnSaveButtonClicked()
     {
         if (ObjectPost.Instance != null)
@@ -263,11 +300,23 @@ public class ApiClient : MonoBehaviour
         }
         else
         {
-            Debug.LogError("ObjectPost.Instance is null. Kan objecten niet opslaan.");
+            Debug.LogError("ObjectPost is null. Kan objecten niet opslaan.");
         }
     }
 
+    //Wanneer er op de home button word geklikt worden objecten uit de wereld gehaald.
+    public void OnHomeButtonClicked()
+    {
 
+        if (ObjectPost.Instance != null)
+        {
+            ObjectPost.Instance.ClearWorldFromObjects();
+        }
+        else
+        {
+            Debug.LogError("ObjectPost is null. Kan objecten niet opslaan.");
+        }
+    }
 
     public async void SaveObjectsForWorld(List<ObjectDTO> objectsToSave)
     {
@@ -279,25 +328,19 @@ public class ApiClient : MonoBehaviour
 
         Debug.Log("Wereld GUID: " + worldBuilder.currentWorldId);
 
-        // Voeg het juiste EnvironmentId toe aan elk object
         foreach (var objectToSave in objectsToSave)
         {
             objectToSave.EnvironmentId = worldBuilder.currentWorldId;
         }
 
-        // Zet de objecten om naar JSON
         foreach (var objectToSave in objectsToSave)
         {
             string jsonData = JsonConvert.SerializeObject(objectToSave);
-            string url = $"https://avansict2220486.azurewebsites.net/api/object2d"; // Verander dit naar jouw API URL
+            string url = $"https://avansict2220486.azurewebsites.net/api/object2d"; 
             string token = ApiClient.Instance.GetToken();
 
-            Debug.Log("Token: " + token);
-            Debug.Log("Object Id" + objectToSave.Id);
-            Debug.Log("Env Id: " + objectToSave.EnvironmentId);
-            Debug.Log("JSON data die wordt verzonden: " + jsonData);
+            Debug.Log("JSON data: " + jsonData);
 
-            // Voer de API-aanroep uit
             string response = await ApiClient.Instance.PerformApiCall(url, "POST", jsonData, token);
 
             if (!string.IsNullOrEmpty(response))
@@ -306,7 +349,7 @@ public class ApiClient : MonoBehaviour
             }
             else
             {
-                Debug.LogError("Fout bij opslaan van object: Geen geldige reactie ontvangen.");
+                Debug.LogError("Geen reactie ontvangen bij opslaan.");
             }
         }
     }
@@ -369,31 +412,26 @@ public class ApiClient : MonoBehaviour
             {
                 Debug.LogError("Bad Request: " + request.downloadHandler.text);
                 errorText.color = Color.red;
-                errorText.text = "Bad Request - Check your input fields!";
+                errorText.text = "Bad Request check input fields!";
             }
             else
             {
-                Debug.Log("Request sent successfully");
+                Debug.Log("Request successfull");
             }
 
             if (request.result == UnityWebRequest.Result.Success)
             {
-                isLoggedIn = true;
                 loginPanel.SetActive(false);
                 buildManager.enabled = true;
                 cameraMovement.enabled = true;
                 buildPanel.SetActive(true);
-                Debug.Log("API Success: " + request.downloadHandler.text);
                 return request.downloadHandler.text;
             }
             else
             {
-                isLoggedIn = false;
                 Debug.LogError("API Error: " + request.error);
                 return null;
             }
         }
     }
-
-
 }
