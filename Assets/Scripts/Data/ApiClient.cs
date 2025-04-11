@@ -81,7 +81,9 @@ public class ApiClient : MonoBehaviour
         var jsondata = JsonUtility.ToJson(request);
         Debug.Log(jsondata);
 
-        await PerformApiCall("https://avansict2220486.azurewebsites.net/account/register", "Post",jsondata);
+        string responseJson = await PerformApiCall("https://avansict2220486.azurewebsites.net/account/register", "Post",jsondata);
+
+        Login();
     }
 
     //Functionaliteit voor het inloggen, er word een post gestuurd naar de api met de email en password text uit de inputfields en er word gecheckt voor een match. Vervolgens word de token opgeslagen en kan die verder gebruikt worden.
