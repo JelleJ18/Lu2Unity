@@ -240,7 +240,7 @@ public class ApiClient : MonoBehaviour
         }
     }
 
-    public void LoadWorld(WorldDTO world)
+    public async void LoadWorld(WorldDTO world)
     {
         Debug.Log("WorldBuilder reference: " + worldBuilder);
         Debug.Log("Wereld aan het laden: " + world.name);
@@ -250,9 +250,23 @@ public class ApiClient : MonoBehaviour
         Debug.Log("Loaded world ID: " + worldBuilder.currentWorldId);  // Log de wereld ID na toewijzing
 
         worldBuilder.BuildWorld(world.maxHeight, world.maxLength);
+        await LoadObjectsForWorld(world.id);
         worldMenu.SetActive(false);
         Debug.Log("Huidige wereld ID na het bouwen van de wereld: " + worldBuilder.currentWorldId);  // Log na bouwen
     }
+
+    public void OnSaveButtonClicked()
+    {
+        if (ObjectPost.Instance != null)
+        {
+            ObjectPost.Instance.SaveAllObjects(worldBuilder.currentWorldId);
+        }
+        else
+        {
+            Debug.LogError("ObjectPost.Instance is null. Kan objecten niet opslaan.");
+        }
+    }
+
 
 
     public async void SaveObjectsForWorld(List<ObjectDTO> objectsToSave)
@@ -297,6 +311,24 @@ public class ApiClient : MonoBehaviour
         }
     }
 
+    private async Task LoadObjectsForWorld(Guid environmentId)
+    {
+        string url = $"https://avansict2220486.azurewebsites.net/api/object2d/environment/{environmentId}";
+        string token = ApiClient.Instance.GetToken();
+
+        string response = await ApiClient.Instance.PerformApiCall(url, "GET", null, token);
+
+        if (!string.IsNullOrEmpty(response))
+        {
+            ObjectDTO[] objectDtos = JsonConvert.DeserializeObject<ObjectDTO[]>(response);
+            foreach (ObjectDTO dto in objectDtos)
+            {
+                ObjectPost.Instance.SpawnObjectFromDto(dto);
+            }
+        }
+    }
+
+
     [System.Serializable]
     public class Object2DListWrapper
     {
@@ -317,7 +349,7 @@ public class ApiClient : MonoBehaviour
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
 
-            if (!string.IsNullOrEmpty(token) && apiUrl.Contains("environment2d"))
+            if (!string.IsNullOrEmpty(token))
             {
                 request.SetRequestHeader("Authorization", "Bearer " + token);
             }

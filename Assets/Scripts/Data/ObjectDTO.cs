@@ -11,7 +11,7 @@ public class ObjectDTO
     public float ScaleX;
     public float ScaleY;
     public float RotationZ;
-    public Guid EnvironmentId;  // Zorg ervoor dat je de juiste ID hebt om te koppelen aan een environment
+    public Guid EnvironmentId;  
 }
 
 

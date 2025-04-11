@@ -50,25 +50,8 @@ public class ObjectToPlace : MonoBehaviour
             {
                 isDragging = false;
                 instantiatedObject.GetComponent<ObjectData>().isPlaced = true;
-
-                ObjectDTO objectData = new ObjectDTO
-                {
-                    Id = Guid.NewGuid(),
-                    PrefabId = instantiatedObject.name, // Of wat je ook als identifier gebruikt
-                    PositionX = instantiatedObject.transform.position.x,
-                    PositionY = instantiatedObject.transform.position.y,
-                    ScaleX = instantiatedObject.transform.localScale.x,
-                    ScaleY = instantiatedObject.transform.localScale.y,
-                    RotationZ = instantiatedObject.transform.eulerAngles.z
-                };
-
-                List<ObjectDTO> objectsToSave = new List<ObjectDTO> { objectData};
-
-                // Controleer de lijst
-                Debug.Log("Aantal objecten in lijst: " + objectsToSave.Count);
-
-                // Stuur de lijst van objecten naar de API voor opslag
-                ApiClient.Instance.SaveObjectsForWorld(objectsToSave);
+                ObjectPost.Instance.placedObjects.Add(instantiatedObject);
+                
 
                 placeSfx.pitch = 0.7f;
                 placeSfx.Play();
